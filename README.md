@@ -1,3 +1,5 @@
+still under construction!!
+
 installation:
 
 1. install java 8 if needed: 
@@ -7,6 +9,7 @@ installation:
 
 
 Compilation:
+
 1. Compile the c code to binary:
 `./script/compileBinary.sh code.c`
 
@@ -14,6 +17,7 @@ Compilation:
 `./compile.sh [binary]`
 
 Run:
+
 1. put input to alice.txt and bob.txt, and put the length of the input to emulator.properties
 
 2. edit the server address to the correct address
