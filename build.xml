@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<project name="FlexSC" default="dist">
+
+  <property name="dist.dir" value="dist" />
+  <property name="jar" value="MipsEmulator.jar" />
+  <property name="build.dir" value="build" />
+  <property name="class.dir" value="${build.dir}/classes" />
+  <property name="src.dir" value="src" />
+  <property name="test.dir" value="test" />
+  <property name="lib.dir" value="lib" />
+  <property name="generated.dir" value="${src.dir}/compiledlib/dov" />
+
+  <target name="init" >
+    <mkdir dir="${class.dir}" />
+    <mkdir dir="${dist.dir}" />
+  </target>
+
+  <target name="compile" depends="init" >
+    <javac includeantruntime="false" debug="on" destdir="${class.dir}">
+      <src path="${src.dir}"/>
+      <src path="${test.dir}"/>
+      <classpath>
+        <pathelement location="${lib.dir}/jargs.jar" />
+        <pathelement location="${lib.dir}/junit.jar" />
+	<pathelement location="${lib.dir}/commons-io-2.4.jar" />
+	<pathelement location="${lib.dir}/SCVM2.jar" />
+      </classpath>
+      <exclude name="*/MipsEmulatorSC.java" />
+      <exclude name="*/MipsEmulatorVerify.java" />
+      <exclude name="arithcircuit2/**" />
+    </javac>
+  </target>
+
+  <target name="clean" depends="init" >
+    <delete dir="${build.dir}" />
+    <delete dir="${dist.dir}" />
+  </target>
+
+  <target name="cleanall" depends="clean,cleangenerated" />
+  <target name="reallyclean" depends="clean,cleangenerated" />
+  <target name="distclean" depends="clean,cleangenerated" />
+  <target name="cleangenerated">
+    <delete>
+        <fileset dir="${generated.dir}" includes="*.cpp" />
+	<fileset dir="${generated.dir}" includes="Cpu_*.java" />
+	<fileset dir="${generated.dir}" includes="Big*.java" />
+	<fileset dir="${generated.dir}" includes="All*.java" />
+    </delete>
+  </target>
+
+  <target name="dist" depends="compile">
+    <copy todir="${class.dir}">
+      <fileset dir="${src.dir}">
+        <include name="**/*.properties" />
+        <include name="**/*.txt" />
+      </fileset>
+    </copy>
+    <jar destfile="${dist.dir}/${jar}">
+      <fileset dir="${class.dir}"/>
+    </jar>
+  </target>
+</project>

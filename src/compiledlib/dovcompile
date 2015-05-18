@@ -1,0 +1,3 @@
+mkdir -p dov
+./compile.sh cpu.cpp compiledlib.dov true ..
+./compile.sh mem.cpp compiledlib.dov true ..

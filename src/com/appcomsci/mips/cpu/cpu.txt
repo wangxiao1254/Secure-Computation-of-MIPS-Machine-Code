@@ -1,0 +1,332 @@
+#define OP_CODE_R 1
+#define OP_CODE_J 2
+#define OP_CODE_I 3
+#define OP_CODE_REGIMM 4
+
+// Branches
+
+#define OP_J		 2
+#define OP_JAL		 3
+#define OP_BEQ		 4
+#define OP_BNE		 5
+#define OP_BLEZ		 6
+#define OP_BGTZ		 7
+
+// REGIMM Branches
+
+#define OP_BLTZ		 0
+#define OP_BGEZ		 1
+#define OP_BLTZAL	16
+#define OP_BGEZAL	17
+
+// OP_CODE_I
+
+#define OP_ADDI		 8
+#define OP_ADDIU	 9
+#define OP_SLTI		10
+#define OP_SLTIU	11
+#define OP_ANDI		12
+#define OP_ORI		13
+#define OP_XORI		14
+#define OP_LUI		15
+
+#define OP_LB		32
+#define OP_LH		33
+#define OP_LWL		34
+#define OP_LW		35
+#define OP_LBU		36
+#define OP_LHU		37
+#define OP_LWR		38
+#define OP_SB		40
+#define OP_SH		41
+#define OP_SWL		42
+#define OP_SW		43
+#define OP_SWR		46
+
+#define OP_LB		32
+#define OP_LH		33
+#define OP_LWL		34
+#define OP_LW		35
+#define OP_LBU		36
+#define OP_LHU		37
+#define OP_LWR		38
+#define OP_SB		40
+#define OP_SH		41
+#define OP_SWL		42
+#define OP_SW		43
+
+// OP_CODE_R
+
+#define OP_SLL		 0
+#define OP_SRL		 2
+#define OP_SRA		 3
+#define OP_SLLV		 4
+#define OP_SRLV		 6
+#define OP_SRAV		 7
+#define OP_JR		 8
+#define OP_JALR		 9
+#define OP_MOVZ		10
+#define OP_MOVN		11
+#define OP_MFHI		16
+#define OP_MTHI		17
+#define OP_MFLO		18
+#define OP_MTLO		19
+#define OP_MULT		24
+#define OP_MULTU	25
+#define OP_DIV		26
+#define OP_DIVU		27
+#define OP_ADD		32
+#define OP_ADDU		33
+#define OP_SUB		34
+#define OP_SUBU		35
+#define OP_AND		36
+#define OP_OR		37
+#define OP_XOR		38
+#define OP_NOR		39
+#define OP_SLT		42
+#define OP_SLTU		43
+
+
+struct %CLASS{};
+int32 SLL(int32 m, int32 n) = native intLib.leftPrivateShift;
+int32 SRL(int32 m, int32 n) = native intLib.rightPrivateShift;
+int32 SRA(int32 m, int32 n) = native intLib.SRA;
+void Multi(int32 m, int32 n, int32[public 2] hiLo) = native intLib.multiplyMips;
+
+typedef Register = native Register;
+//int32 Register.read(int32 index) = native read;
+//void Register.write(int32 index, int32 content) = native write;
+
+int32 Register.read(int32 index, public int32 mask) = native read;
+void Register.write(int32 index, int32 content, public int32 mask, int1 terminationBit) = native write;
+
+ 
+int3 %CLASS.checkType(int32 op) {
+	int3 ret = OP_CODE_I;
+	if(op == 0)
+		ret = OP_CODE_R;
+	if(op == 1)
+		ret = OP_CODE_REGIMM;
+%CHECK_TYPE
+	//else
+	//	ret = ;
+	return ret;
+}
+
+int32 %CLASS.function(Register reg, secure int32 inst, secure int32 pc
+%HILO_REG
+, int1 terminationBit, public int32[public 2]masks) {
+%TOUCHED
+masks[0] = MEMRS;
+masks[1] = MEMRT;
+	int32 op = inst >> 26;
+	int32 rt = ((inst << 11)>>27);
+	int32 rs = ((inst << 6) >> 27);
+	int32 rd = ((inst << 16)>>27);
+	int32 rret = 0;
+	int32 shamt = ((inst << 21)>>27);
+	int32 unsignExt = inst & 0xffff;
+	int32 zeroExt = unsignExt;
+	int32 funct = inst & 0x3f;
+	// int32 regimm = rt;	// Use rt for faster but more opaque code
+	int32 newpc;
+	// These declarations must precede the "if"
+	int32 a = 1;
+	int32 reg_rs_r = reg.read(rs, TOUCHED_RS);
+	int32 reg_rt_r = reg.read(rt, TOUCHED_RT);
+	int32 reg_rd_w = 0;
+	int32 reg_ret_w = 0;
+	int32 reg_rt_w = reg_rt_r;
+
+	if (unsignExt &0x00008000 != 0)
+		unsignExt = unsignExt | 0xffff0000;
+
+	newpc = pc + 4;
+	int3 op_type = this.checkType(op);
+	if(op_type != OP_CODE_R)
+		rd = 0;
+%ACTIONS
+	//only rt or rd will be update in one cycle
+	int32 to_write_index = rt;
+	int32 to_write_content = reg_rt_w;
+	public int32 mask = TOUCHED_RT | TOUCHED_RD;
+    if(op_type == OP_CODE_R) {
+    	to_write_index = rd;
+    	to_write_content = reg_rd_w;
+    }
+    reg.write(to_write_index, to_write_content, mask, terminationBit);
+	reg.write(rret, reg_ret_w, TOUCHED_RT, terminationBit);
+	int32 n0 = 0;
+	public int32 mask = 0xFFFFFFFF;
+	reg.write(n0,  n0, mask, terminationBit);
+	return newpc;
+}
+%OP_ADDI
+	reg_rt_w = reg_rs_r + unsignExt;
+%OP_ADDIU
+	reg_rt_w = reg_rs_r + unsignExt;
+%OP_SLTI
+	if(reg_rs_r < unsignExt) reg_rt_w = 1; else reg_rt_w = 0;
+%OP_SLTIU
+    // This is WRONG
+    if(reg_rs_r < unsignExt) reg_rt_w = 1; else reg_rt_w = 0;
+	// MISSING
+	// See SLTU
+	// if((uint32)reg_rs_r < (unit32)unsignExt) reg_rt_w = 1; else reg_rt_w = 0;
+%OP_ANDI
+	reg_rt_w = reg_rs_r & zeroExt;
+%OP_ORI
+	reg_rt_w = reg_rs_r | zeroExt;
+%OP_XORI
+	reg_rt_w = reg_rs_r ^ zeroExt;
+%OP_LUI
+	reg_rt_w = zeroExt << 16;
+%OP_SLL
+	reg_rd_w = SLL(reg_rt_r, shamt);//(reg_rt << shamt);
+%OP_SRL
+	reg_rd_w = SRL(reg_rt_r, shamt);//(reg_rt >> shamt);
+%OP_SRA
+	reg_rd_w = SRA(reg_rt_r, shamt); 
+%OP_SLLV
+	MISSING
+%OP_SRLV
+	MISSING
+%OP_SRAV
+	MISSING
+%OP_MOVZ
+	if(reg_rt_r == 0) reg_rd_w = reg_rs_r;
+%OP_MOVN
+	if(reg_rt_r != 0) reg_rd_w = reg_rs_r;
+%OP_MFHI
+	//MISSING
+	reg_rd_w = hiLo[1];
+%OP_MTHI
+	//MISSING
+	hiLo[1] = reg_rs_r;
+%OP_MFLO
+	//MISSING
+	reg_rd_w = hiLo[0];
+%OP_MTLO
+	//MISSING
+	hiLo[0] = reg_rs_r;
+%OP_MULT
+	Multi(reg_rs_r, reg_rt_r, hiLo);
+%OP_MLTU
+	MISSING
+%OP_DIV
+	MISSING
+%OP_DIVU
+	MISSING
+%OP_ADD
+	reg_rd_w = reg_rs_r + reg_rt_r;
+%OP_ADDU
+	reg_rd_w = reg_rs_r + reg_rt_r;
+%OP_SUB
+	reg_rd_w = reg_rs_r - reg_rt_r;
+%OP_SUBU
+	reg_rd_w = reg_rs_r - reg_rt_r;
+%OP_AND
+	reg_rd_w = reg_rs_r & reg_rt_r;
+%OP_OR
+	reg_rd_w = reg_rs_r | reg_rt_r;
+%OP_XOR
+	reg_rd_w = reg_rs_r ^ reg_rt_r;
+%OP_NOR
+	// ~ operator is not implemented
+	// reg_rd_w = ~(reg_rs_r | reg_rt_r);
+	// UGLINESS
+	int32 bugWorkaround = 0xffffffff;
+	reg_rd_w = bugWorkaround ^ (reg_rs_r | reg_rt_r);
+%OP_SLT
+	if(reg_rs_r < reg_rt_r) reg_rd_w = 1; else reg_rd_w = 0;
+%OP_SLTU
+	// MISSING
+	// No casts and no unsigned types
+	//if((uint32)reg_rs_r < (uint32)reg_rt_r) reg_rd_w = 1; else reg_rd_w = 0;
+	// Following code throws compiler into infinite loop
+	// int64 u_reg_rs_r;
+	// int64 u_reg_rt_r;
+	// u_reg_rs_r = reg_rs_r; u_reg_rs_r = u_reg_rs_r & 0xffffffff;
+	// u_reg_rt_r = reg_rt_r; u_reg_rt_r = u_reg_rt_r & 0xffffffff;
+	// This is WRONG
+	if(reg_rs_r < reg_rt_r) reg_rd_w = 1; else reg_rd_w = 0;
+%OP_J
+	newpc = (newpc&0xf0000000) | ((inst<<2)&0xffffffc);
+%OP_JAL
+	reg_ret_w = newpc + 4;
+	rret = 31;
+	newpc = (newpc&0xf0000000) | ((inst<<2)&0xffffffc);
+%OP_JR
+	/* This is fine as a FUNCT instruction, it just doesn't touch rd */
+	newpc = reg_rs_r;
+%OP_JALR
+	/* This is fine as FUNCT instruction */
+	reg_rd_w = newpc + 4;
+	newpc = reg_rs_r;
+%OP_BNE
+	if(reg_rs_r != reg_rt_r)
+		newpc = newpc + (unsignExt<<2);
+%OP_BEQ
+	if(reg_rs_r == reg_rt_r)
+		newpc = newpc + (unsignExt<<2);
+%OP_BLEZ
+    if(reg_rs_r <= 0)
+    	newpc = newpc + (unsignExt<<2);
+%OP_BGTZ
+	if(reg_rs_r > 0)
+		newpc = newpc + (unsignExt<<2);
+%OP_BGEZ
+	if(reg_rs_r >= 0)
+		newpc = newpc + (unsignExt<<2);
+%OP_BLTZ
+	if(reg_rs_r < 0)
+		newpc = newpc + (unsignExt<<2);
+%OP_BLTZAL
+	if(reg_rs_r < 0) {
+		reg_ret_w = newpc + 4;
+		rret = 31;
+		newpc = newpc + (unsignExt<<2);
+	}
+%OP_BGEZAL
+	if(reg_rs_r >= 0) {
+		reg_ret_w = newpc + 4;
+		rret = 31;
+		newpc = newpc + (unsignExt<<2);
+	}
+%WRAPPER
+%PACKAGE
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import oram.Register;
+import oram.SecureArray;
+import flexsc.CompEnv;
+import flexsc.CpuFcn;
+
+public class %CLASSImpl<T> implements CpuFcn<T> {
+	private %CLASS<T> cpu = null;
+
+	public %CLASSImpl(CompEnv<T>env) throws Exception {
+		this.cpu = new %CLASS<T>(env);
+	}
+
+	public %CLASSImpl() {
+	}
+
+	public static String opcodes[] = {
+%OPCODES
+	};
+
+	static Set<String> opcodeSet = new HashSet<String>(Arrays.asList(opcodes));
+	public Set<String> getOpcodesImplemented() {
+		return opcodeSet;
+	}
+
+	public T[] function(Register<T> reg, T[] inst, T[] pc, T[][] hiLo, T terminationBit, int[]masks) throws Exception {
+		if(cpu == null) return null;
+		return cpu.function(reg,  inst,  pc
+%HILO_REG
+		, terminationBit, masks);
+	}
+}

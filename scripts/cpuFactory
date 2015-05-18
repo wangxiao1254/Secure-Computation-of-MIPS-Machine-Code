@@ -1,0 +1,133 @@
+# Sanity checks
+
+# Where things go
+OUTDIR=src
+
+if test ! -d $OUTDIR/compiledlib/dov
+then
+    echo "The output directory $OUTDIR/compiledlib/dov does not exist"
+    OUTDIR=../src
+    if test ! -d $OUTDIR/compiledlib/dov
+    then
+	echo "The output directory $OUTDIR/compiledlib/dov does not exist either.  Exiting."
+    	exit 1
+    fi
+fi
+
+F=SCVM2.jar
+LIBS="../lib lib ../../../lib"
+for L in $LIBS
+do
+    if test -d $L
+    then
+	if test -f $L/$F
+	then
+	    LIBDIR=$L
+	    break
+	fi
+    fi
+done
+
+if test "X$LIBDIR" = "X"
+then
+    echo "Unable to find $F in $LIBS.  Exiting."
+    exit 1
+fi
+
+F=CpuFactory.class
+BINS="bin ../bin SimpleBinaryReader/bin build/classes"
+
+for C in $BINS
+do
+    if test -d $C
+    then
+	X=`find $C -name "$F" -print -quit`
+	if test "X$X" != "X"
+	then
+	    BINDIR=$C
+	    break
+	fi
+    fi
+done
+
+if test "X$BINDIR" = "X"
+then
+   echo "Unable to find $F in $BINS.  Exiting"
+fi
+
+CP="$BINDIR:$LIBDIR/*"
+
+
+# Binary
+PROG="$1"
+if test "X$PROG" != "X"
+then
+    if test ! -f "$PROG"
+    then
+	echo "$PROG does not exist."
+	exit 1
+    fi
+else
+    PROGS="SimpleBinaryReader/data/djikstra SimpleBinaryReader/data/djikstra"
+    for P in $PROGS
+    do
+	if test -f $P
+	then
+	    PROG=$P
+	    break
+	fi
+    done
+    if test "X$PROG" = "X"
+    then
+	echo "Unable to open $PROGS.  Please specify a file to open."
+	exit 1
+    fi
+fi
+
+# First, some hacking to build an omnibus CPU
+
+if /bin/false
+then
+
+# This is turned off because the unimplemented bits
+# cause indigestion (as designed)
+
+java -classpath $CP \
+	com/appcomsci.mips.cpu.CpuBuilder \
+	--class=AllCpu \
+	--output.directory=$OUTDIR
+
+if test -f AllCpu.cpp
+then
+	sed 's+MISSING+// MISSING+' <AllCpu.cpp >dov/AllCpu.cpp
+	rm AllCpu.cpp
+else
+	if test ! -f dov/AllCpu.cpp
+	then
+		echo 'AllCpu.cpp is missing'
+	fi
+fi
+
+fi
+
+
+# Now build a complete CPU for the binary
+#Xiao: this CPU is not used....
+java -classpath $CP \
+	com/appcomsci.mips.cpu.CpuBuilder \
+	--class=BigCpu \
+	--output.directory=$OUTDIR \
+	--entry.point=sfe_main \
+	--function.load.list=sfe_main,func_a,func_b,allselected $PROG
+
+# Now build individual CPUs
+
+# uncomment to clean up
+# better to use ant to do this: ant cleangenerated
+# rm -rf $OUTDIR/compiledlib/dov/*.cpp $OUTDIR/compiledlib/dov/Cpu_*.java $OUTDIR/compiledlib/dov/CpuImpl_*.java
+
+java -classpath $CP \
+	com.appcomsci.mips.cpu.CpuFactory \
+	--output.directory=$OUTDIR \
+	--entry.point=sfe_main \
+	--function.load.list=sfe_main,func_a,func_b,allselected $PROG
