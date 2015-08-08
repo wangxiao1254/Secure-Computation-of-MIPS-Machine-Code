@@ -1,5 +1,5 @@
-wget https://www.dropbox.com/s/ioltj917erbcyqh/mipsel.tar.gz?dl=0
+wget https://iu.box.com/shared/static/cd0fkbo6d0xm8g3cnfa6i87qjxltq2wc.gz
 mkdir -p /opt
 mkdir -p /opt/mipsel
-tar -zxf mipsel.tar.gz?dl=0 -C /opt/mipsel/
-rm mipsel.tar.gz?dl=0
+tar -zxf cd0fkbo6d0xm8g3cnfa6i87qjxltq2wc.gz -C /opt/mipsel/
+rm cd0fkbo6d0xm8g3cnfa6i87qjxltq2wc.gz
