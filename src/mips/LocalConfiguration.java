@@ -42,7 +42,7 @@ public class LocalConfiguration extends Configuration {
 		List<String> lines = Files.readAllLines(Paths.get(file));
 		int[] data = new int[length];
 		for(int i = 0; i < data.length; ++i)
-			data[i] = new Integer(lines.get(i));
+			data[i] = new Integer(lines.get(i).trim());
 		return data;
 	}
 	

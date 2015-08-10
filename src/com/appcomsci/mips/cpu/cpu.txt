@@ -184,15 +184,15 @@ masks[1] = MEMRT;
 %OP_SLL
 	reg_rd_w = SLL(reg_rt_r, shamt);//(reg_rt << shamt);
 %OP_SRL
-	reg_rd_w = SRL(reg_rt_r, shamt);//(reg_rt >> shamt);
+	reg_rd_w = SRL(reg_rt_r, shamt);//(reg_rt >> shamt); something wrong here..
 %OP_SRA
 	reg_rd_w = SRA(reg_rt_r, shamt); 
 %OP_SLLV
-	MISSING
+	reg_rd_w = SLL(reg_rt_r, reg_rs_r);
 %OP_SRLV
-	MISSING
+	reg_rd_w = SRL(reg_rt_r, reg_rs_r);
 %OP_SRAV
-	MISSING
+	reg_rd_w = SRL(reg_rt_r, reg_rs_r);
 %OP_MOVZ
 	if(reg_rt_r == 0) reg_rd_w = reg_rs_r;
 %OP_MOVN
