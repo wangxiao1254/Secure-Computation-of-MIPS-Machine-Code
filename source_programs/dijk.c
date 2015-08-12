@@ -5,8 +5,7 @@ int sfe_main(int *a, int *b, int l1, int l2) {
    int dis[MAX];
    dis[b[0]] = 0;
    int * e = a + 1;
-   int logDim = a[0];
-   int n = 1<<logDim;
+   int n = a[0];
    for(int i = 0; i < n; ++i) {
       int bestj = -1, bestdis = -1;
       for(int j=0; j<n; ++j) {
@@ -17,7 +16,7 @@ int sfe_main(int *a, int *b, int l1, int l2) {
       }
       vis[bestj] = 1;
       for(int j=0; j<n; ++j) {
-         int newDis = bestdis + e[bestj<<logDim+j];
+         int newDis = bestdis + e[bestj*n+j];
          if(newDis < dis[j])
             dis[j] = newDis;
       }
