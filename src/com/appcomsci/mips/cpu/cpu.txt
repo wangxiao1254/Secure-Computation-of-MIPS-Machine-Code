@@ -91,7 +91,7 @@ struct %CLASS{};
 int32 SLL(int32 m, int32 n) = native intLib.leftPrivateShift;
 int32 SRL(int32 m, int32 n) = native intLib.rightPrivateShift;
 int32 SRA(int32 m, int32 n) = native intLib.SRA;
-void Multi(int32 m, int32 n, int32[public 2] hiLo) = native intLib.multiplyMips;
+int32 Multi(int32 m, int32 n) = native intLib.multiplyMips;
 
 typedef Register = native Register;
 //int32 Register.read(int32 index) = native read;
@@ -210,7 +210,7 @@ masks[1] = MEMRT;
 	//MISSING
 	hiLo[0] = reg_rs_r;
 %OP_MULT
-	Multi(reg_rs_r, reg_rt_r, hiLo);
+	hiLo[0] = Multi(reg_rs_r, reg_rt_r);
 %OP_MLTU
 	MISSING
 %OP_DIV
