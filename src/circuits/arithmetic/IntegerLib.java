@@ -166,6 +166,10 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 				xor(x[x.length - 1], y[y.length - 1]));
 
 	}
+	
+	public T[] divMips(T[] x, T[] y) {
+		return Arrays.copyOf(divInternal(x,y), 32);
+	}
 
 	// Restoring Division Algorithm
 	public T[] divInternal(T[] x, T[] y) {

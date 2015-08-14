@@ -92,6 +92,7 @@ int32 SLL(int32 m, int32 n) = native intLib.leftPrivateShift;
 int32 SRL(int32 m, int32 n) = native intLib.rightPrivateShift;
 int32 SRA(int32 m, int32 n) = native intLib.SRA;
 int32 Multi(int32 m, int32 n) = native intLib.multiplyMips;
+int32 Div(int32 m, int32 n) = native intLib.divMips;
 
 typedef Register = native Register;
 //int32 Register.read(int32 index) = native read;
@@ -214,7 +215,7 @@ masks[1] = MEMRT;
 %OP_MLTU
 	MISSING
 %OP_DIV
-	MISSING
+	hiLo[0] = Div(reg_rs_r, reg_rt_r);
 %OP_DIVU
 	MISSING
 %OP_ADD

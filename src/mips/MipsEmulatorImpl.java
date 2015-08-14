@@ -139,7 +139,7 @@ public class MipsEmulatorImpl<ET> implements MipsEmulator {
 				fetchAnd += env.numOfAnds - fetchAndStamp;
 
 				terminationBit = lib.and(terminationBit, testTerminate(reg, newInst, lib));
-				if(count%10 == 0) {
+				if(count%100 == 0) {
 					T[] res = lib.getEnv().newTArray(1);
 					res[0] = terminationBit ;			
 					boolean ret = lib.declassifyToBoth(res)[0];
